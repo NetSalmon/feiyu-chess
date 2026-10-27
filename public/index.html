@@ -1,0 +1,642 @@
+<!doctype html>
+<!--
+肥鱼 CHESS
+Copyright (C) 2026 NetSalmon
+SPDX-License-Identifier: GPL-3.0-only
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3f7fc" />
+    <title>肥鱼 CHESS · AI 国际象棋竞技场</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E♞%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <header class="header">
+      <a class="brand" href="/" aria-label="肥鱼国际象棋首页"
+        ><span class="brand-icon">♞</span
+        ><span>肥鱼 <b>CHESS</b><small>AI 国际象棋竞技场</small></span></a
+      >
+      <div class="header-right">
+        <span class="local"><i></i> 本地运行</span
+        ><a
+          href="https://github.com/jhlywa/chess.js"
+          target="_blank"
+          rel="noreferrer"
+          class="rules-link"
+          >棋规由 chess.js 驱动 ↗</a
+        >
+      </div>
+    </header>
+    <main>
+      <div class="intro">
+        <div>
+          <p class="eyebrow">A MEETING OF MINDS</p>
+          <h1>两种思考，一场交锋<span>。</span></h1>
+          <p class="subtitle">为 AI 赋予个性，让每一步都有自己的风格。</p>
+        </div>
+        <span class="arena-label"><i></i> CHESS ARENA / 01</span>
+      </div>
+      <form id="settings-form" class="workspace" novalidate>
+        <aside
+          class="agent-card white-card"
+          id="white-player"
+          aria-label="白方设置"
+        >
+          <div class="card-kicker">
+            <span>01 / WHITE</span
+            ><span class="player-status" id="white-status">先手</span>
+          </div>
+          <div class="profile-header">
+            <button
+              type="button"
+              class="avatar-picker"
+              data-upload="white"
+              aria-label="设置白方头像"
+              title="上传白方头像"
+            >
+              <span id="white-avatar" class="avatar">♔</span
+              ><span class="avatar-camera">＋</span>
+            </button>
+            <div class="player-info">
+              <strong id="white-name">白方 AI</strong
+              ><span id="white-model">等待接入模型</span
+              ><button
+                type="button"
+                class="reset-avatar"
+                data-reset="white"
+                hidden
+              >
+                恢复默认头像
+              </button>
+            </div>
+          </div>
+          <input
+            type="file"
+            id="white-avatar-file"
+            accept="image/png,image/jpeg,image/webp"
+            hidden
+            aria-label="上传白方头像文件"
+          />
+          <input type="hidden" name="white-avatar" value="" />
+          <div class="prompt-bubble">
+            <div class="bubble-heading">
+              <span>SYSTEM PROMPT</span
+              ><button
+                type="button"
+                class="edit-prompt"
+                data-edit="white"
+                aria-expanded="false"
+                aria-controls="white-prompt-editor"
+              >
+                编辑 ↗
+              </button>
+            </div>
+            <p class="prompt-text" id="white-prompt-text">
+              你是一位冷静、严谨的国际象棋棋手。重视子力发展、中心控制和王的安全。每次落子前检查对方的威胁，选择你认为最强的一步棋。
+            </p>
+            <div id="white-prompt-editor" class="prompt-editor" hidden>
+              <label for="white-prompt-input" class="sr-only"
+                >白方 System Prompt</label
+              ><textarea
+                id="white-prompt-input"
+                name="white-systemPrompt"
+                maxlength="16000"
+                rows="6"
+              >
+你是一位冷静、严谨的国际象棋棋手。重视子力发展、中心控制和王的安全。每次落子前检查对方的威胁，选择你认为最强的一步棋。</textarea
+              ><button type="button" class="apply-prompt" data-apply="white">
+                完成设置 ✓
+              </button>
+            </div>
+          </div>
+          <section class="speech-section" aria-label="白方发言">
+            <div class="speech-heading">
+              <span>棋手发言</span><small>最新在上 · 向下查看历史</small>
+            </div>
+            <div
+              class="speech-feed"
+              id="white-messages"
+              role="region"
+              tabindex="0"
+              aria-label="白方发言记录"
+            ></div>
+          </section>
+          <label class="name-field"
+            >显示名称<input
+              name="white-name"
+              autocomplete="off"
+              placeholder="白方 AI"
+              maxlength="80"
+              value="白方 AI"
+          /></label>
+          <div class="effort-control" data-level="1">
+            <label for="white-effort"
+              >思考强度<output id="white-effort-value" for="white-effort"
+                >自动</output
+              ></label
+            >
+            <input
+              id="white-effort"
+              name="white-reasoningEffort"
+              type="range"
+              min="0"
+              max="4"
+              step="1"
+              value="1"
+              aria-valuetext="自动，使用模型默认强度"
+            />
+            <div class="range-labels" aria-hidden="true">
+              <span>关闭</span><span>自动</span><span>轻量</span
+              ><span>均衡</span><span>深入</span>
+            </div>
+            <p id="white-effort-hint" class="effort-hint">
+              使用模型默认思考强度
+            </p>
+          </div>
+          <details class="api-settings" id="white-api-settings">
+            <summary>
+              <span><span class="settings-icon">⚙</span> API 连接设置</span
+              ><span class="detail-plus">＋</span>
+            </summary>
+            <div class="api-fields">
+              <label
+                >模型名称<input
+                  name="white-model"
+                  autocomplete="off"
+                  placeholder="your-model-id"
+                  maxlength="200"
+                  required
+              /></label>
+              <label
+                >API 请求 URL（完整地址）<input
+                  name="white-baseUrl"
+                  type="url"
+                  autocomplete="off"
+                  placeholder="https://api.example.com/v1/chat/completions"
+                  required
+              /></label>
+              <label
+                >API Key <span class="optional">本地服务可留空</span
+                ><span class="password-wrap"
+                  ><input
+                    name="white-apiKey"
+                    type="password"
+                    autocomplete="off"
+                    placeholder="sk-…"
+                  /><button
+                    class="reveal"
+                    type="button"
+                    aria-label="显示白方 API Key"
+                    data-reveal="white-apiKey"
+                  >
+                    显示
+                  </button></span
+                ></label
+              >
+            </div>
+          </details>
+          <p class="agent-footnote">稳健布局，步步为营。</p>
+        </aside>
+        <section class="arena" aria-label="国际象棋棋盘">
+          <div class="arena-topline">
+            <div class="turn-indicator">
+              <i id="turn-dot"></i><span id="board-status">等待开局</span>
+            </div>
+            <div>
+              <span id="match-status" class="status-badge">未开始</span
+              ><button
+                type="button"
+                class="icon-button"
+                id="flip"
+                aria-label="翻转棋盘"
+                title="翻转棋盘"
+              >
+                ⇅
+              </button>
+            </div>
+          </div>
+          <div class="board-shell">
+            <div
+              id="board"
+              class="board"
+              role="img"
+              aria-label="国际象棋棋盘，白方在下"
+            ></div>
+          </div>
+          <div class="board-caption">
+            <span
+              >♔ 白方先行
+              <span class="caption-divider">/</span> 自动交替落子</span
+            ><button type="button" class="text-button" id="export" disabled>
+              ↓ 导出 PGN
+            </button>
+          </div>
+          <div id="result" hidden role="status"></div>
+          <div class="match-summary">
+            <h2 id="match-title">棋局，蓄势待发。</h2>
+            <p id="match-subtitle">配置双方模型，开始第一步。</p>
+          </div>
+          <div class="main-controls">
+            <button type="submit" id="start" class="primary-button">
+              开始对弈 ↗</button
+            ><button type="button" id="pause" class="secondary-button" disabled>
+              Ⅱ 暂停对局</button
+            ><button
+              type="button"
+              id="stop"
+              class="secondary-button danger"
+              disabled
+            >
+              结束对局</button
+            ><button
+              type="button"
+              id="new-game"
+              class="secondary-button"
+              hidden
+            >
+              新建对局 ↗
+            </button>
+          </div>
+          <button
+            type="button"
+            id="save-config"
+            class="secondary-button save-config"
+            hidden
+          >
+            更新当前对局配置
+          </button>
+          <div class="timeout-control">
+            <label for="timeout-seconds">请求超时时限 <span>秒</span></label>
+            <div class="timeout-input-row">
+              <input
+                id="timeout-seconds"
+                name="timeoutSeconds"
+                type="number"
+                min="1"
+                max="3600"
+                step="1"
+                value="60"
+                required
+                aria-describedby="timeout-hint"
+              />
+              <button
+                type="button"
+                id="apply-timeout"
+                class="secondary-button"
+                hidden
+              >
+                应用到后续请求
+              </button>
+            </div>
+            <p id="timeout-hint">1–3600 秒，适用于每次走棋与赛后采访请求。</p>
+          </div>
+          <div class="arena-options">
+            <button type="button" id="demo" class="demo-button">
+              试试本地演示 →
+            </button>
+            <details class="advanced">
+              <summary>对局选项 <span>＋</span></summary>
+              <div class="advanced-fields">
+                <label
+                  >落子间隔（毫秒）<input
+                    type="number"
+                    name="delayMs"
+                    value="500"
+                    min="0"
+                    max="5000"
+                    step="100"
+                    required /></label
+                ><label
+                  >最多半回合数<input
+                    type="number"
+                    name="maxPlies"
+                    value="400"
+                    min="4"
+                    max="2000"
+                    required
+                /></label>
+                <p>每方落子一次为一个半回合。达到上限时程序裁定和棋。</p>
+              </div>
+            </details>
+          </div>
+          <p class="privacy-note" id="preferences-note">
+            双方设置（含 API Key）自动保存在当前浏览器。
+          </p>
+          <p class="privacy-note" id="server-storage-note" role="status">
+            对局自动保存在服务器，重启后可恢复。
+          </p>
+          <div class="game-history">
+            <label for="history-select">服务器对局记录</label>
+            <div class="history-controls">
+              <select id="history-select" aria-label="选择服务器历史对局">
+                <option value="">正在读取…</option>
+              </select>
+              <button type="button" id="open-history" class="secondary-button">
+                查看
+              </button>
+              <button type="button" id="refresh-history" class="text-button">
+                刷新
+              </button>
+            </div>
+          </div>
+          <div class="position-bar">
+            <span>POSITION / FEN</span
+            ><button type="button" id="copy-fen" title="复制当前 FEN">
+              <code id="fen"></code><span>⧉</span>
+            </button>
+          </div>
+        </section>
+
+        <aside
+          class="agent-card black-card"
+          id="black-player"
+          aria-label="黑方设置"
+        >
+          <div class="card-kicker">
+            <span>02 / BLACK</span
+            ><span class="player-status" id="black-status">后手</span>
+          </div>
+          <div class="profile-header">
+            <button
+              type="button"
+              class="avatar-picker"
+              data-upload="black"
+              aria-label="设置黑方头像"
+              title="上传黑方头像"
+            >
+              <span id="black-avatar" class="avatar">♚</span
+              ><span class="avatar-camera">＋</span>
+            </button>
+            <div class="player-info">
+              <strong id="black-name">黑方 AI</strong
+              ><span id="black-model">等待接入模型</span
+              ><button
+                type="button"
+                class="reset-avatar"
+                data-reset="black"
+                hidden
+              >
+                恢复默认头像
+              </button>
+            </div>
+          </div>
+          <input
+            type="file"
+            id="black-avatar-file"
+            accept="image/png,image/jpeg,image/webp"
+            hidden
+            aria-label="上传黑方头像文件"
+          />
+          <input type="hidden" name="black-avatar" value="" />
+          <div class="prompt-bubble">
+            <div class="bubble-heading">
+              <span>SYSTEM PROMPT</span
+              ><button
+                type="button"
+                class="edit-prompt"
+                data-edit="black"
+                aria-expanded="false"
+                aria-controls="black-prompt-editor"
+              >
+                编辑 ↗
+              </button>
+            </div>
+            <p class="prompt-text" id="black-prompt-text">
+              你是一位善于反击的国际象棋棋手。积极寻找战术机会，善用不平衡局面。每次落子前检查是否存在将军、吃子或直接威胁。
+            </p>
+            <div id="black-prompt-editor" class="prompt-editor" hidden>
+              <label for="black-prompt-input" class="sr-only"
+                >黑方 System Prompt</label
+              ><textarea
+                id="black-prompt-input"
+                name="black-systemPrompt"
+                maxlength="16000"
+                rows="6"
+              >
+你是一位善于反击的国际象棋棋手。积极寻找战术机会，善用不平衡局面。每次落子前检查是否存在将军、吃子或直接威胁。</textarea
+              ><button type="button" class="apply-prompt" data-apply="black">
+                完成设置 ✓
+              </button>
+            </div>
+          </div>
+          <section class="speech-section" aria-label="黑方发言">
+            <div class="speech-heading">
+              <span>棋手发言</span><small>最新在上 · 向下查看历史</small>
+            </div>
+            <div
+              class="speech-feed"
+              id="black-messages"
+              role="region"
+              tabindex="0"
+              aria-label="黑方发言记录"
+            ></div>
+          </section>
+          <label class="name-field"
+            >显示名称<input
+              name="black-name"
+              autocomplete="off"
+              placeholder="黑方 AI"
+              maxlength="80"
+              value="黑方 AI"
+          /></label>
+          <div class="effort-control" data-level="1">
+            <label for="black-effort"
+              >思考强度<output id="black-effort-value" for="black-effort"
+                >自动</output
+              ></label
+            >
+            <input
+              id="black-effort"
+              name="black-reasoningEffort"
+              type="range"
+              min="0"
+              max="4"
+              step="1"
+              value="1"
+              aria-valuetext="自动，使用模型默认强度"
+            />
+            <div class="range-labels" aria-hidden="true">
+              <span>关闭</span><span>自动</span><span>轻量</span
+              ><span>均衡</span><span>深入</span>
+            </div>
+            <p id="black-effort-hint" class="effort-hint">
+              使用模型默认思考强度
+            </p>
+          </div>
+          <details class="api-settings" id="black-api-settings">
+            <summary>
+              <span><span class="settings-icon">⚙</span> API 连接设置</span
+              ><span class="detail-plus">＋</span>
+            </summary>
+            <div class="api-fields">
+              <label
+                >模型名称<input
+                  name="black-model"
+                  autocomplete="off"
+                  placeholder="your-model-id"
+                  maxlength="200"
+                  required
+              /></label>
+              <label
+                >API 请求 URL（完整地址）<input
+                  name="black-baseUrl"
+                  type="url"
+                  autocomplete="off"
+                  placeholder="https://api.example.com/v1/chat/completions"
+                  required
+              /></label>
+              <label
+                >API Key <span class="optional">本地服务可留空</span
+                ><span class="password-wrap"
+                  ><input
+                    name="black-apiKey"
+                    type="password"
+                    autocomplete="off"
+                    placeholder="sk-…"
+                  /><button
+                    class="reveal"
+                    type="button"
+                    aria-label="显示黑方 API Key"
+                    data-reveal="black-apiKey"
+                  >
+                    显示
+                  </button></span
+                ></label
+              >
+              <button type="button" id="copy-config" class="copy-config">
+                ← 复制白方 API 配置
+              </button>
+            </div>
+          </details>
+          <p class="agent-footnote">静候时机，伺机反击。</p>
+        </aside>
+      </form>
+      <section class="records" aria-label="对局记录">
+        <div class="moves-panel">
+          <div class="record-heading">
+            <h3>走棋记录 <span id="move-count">0</span></h3>
+            <span>MOVE HISTORY</span>
+          </div>
+          <div class="move-table-head">
+            <span>回合</span><span>♔ 白方</span><span>♚ 黑方</span>
+          </div>
+          <div id="moves" class="moves"></div>
+        </div>
+        <div class="activity-panel">
+          <div class="record-heading">
+            <h3><i></i> 对局动态</h3>
+            <span>LIVE ACTIVITY</span>
+          </div>
+          <div
+            id="activity"
+            class="activity"
+            role="log"
+            aria-label="对局动态"
+            aria-live="polite"
+          ></div>
+        </div>
+      </section>
+
+      <section id="interviews" class="interviews" aria-label="赛后采访" hidden>
+        <div class="interview-heading">
+          <div>
+            <p class="eyebrow">AFTER THE FINAL MOVE</p>
+            <h2>棋局落幕，听听他们怎么说。</h2>
+            <p>保留对战上下文，聊聊这场交锋与胜负感受。</p>
+          </div>
+          <button
+            type="button"
+            id="retry-interviews"
+            class="secondary-button"
+            hidden
+          >
+            重试未完成的采访 ↗
+          </button>
+        </div>
+        <div class="interview-grid">
+          <article class="interview-card">
+            <div class="interview-profile">
+              <span id="white-interview-avatar" class="avatar small-avatar"
+                >♔</span
+              >
+              <div>
+                <h3 id="white-interview-name">白方 AI</h3>
+                <span id="white-interview-status" class="interview-status"
+                  >等待采访</span
+                >
+              </div>
+              <span class="quote-mark" aria-hidden="true">“</span>
+            </div>
+            <p
+              id="white-interview-text"
+              class="interview-text"
+              aria-live="polite"
+            >
+              正在准备赛后采访…
+            </p>
+          </article>
+          <article class="interview-card">
+            <div class="interview-profile">
+              <span id="black-interview-avatar" class="avatar small-avatar"
+                >♚</span
+              >
+              <div>
+                <h3 id="black-interview-name">黑方 AI</h3>
+                <span id="black-interview-status" class="interview-status"
+                  >等待采访</span
+                >
+              </div>
+              <span class="quote-mark" aria-hidden="true">“</span>
+            </div>
+            <p
+              id="black-interview-text"
+              class="interview-text"
+              aria-live="polite"
+            >
+              正在准备赛后采访…
+            </p>
+          </article>
+        </div>
+        <p class="interview-note" id="interview-note">
+          采访使用双方原有模型与对局上下文，在赛后各发起一次请求。
+        </p>
+      </section>
+      <footer>
+        <span
+          >肥鱼 CHESS <span class="footer-separator">/</span> EVERY MOVE, A NEW
+          POSSIBILITY</span
+        ><span>合法落子校验 <i>·</i> 自动轮换 <i>·</i> 胜负判定</span>
+      </footer>
+    </main>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <dialog id="confirm-dialog">
+      <form method="dialog">
+        <h2>结束当前对局？</h2>
+        <p>结束后将停止 AI 请求，保留棋盘与走棋记录，可导出 PGN。</p>
+        <div>
+          <button class="secondary-button" value="cancel">继续对弈</button
+          ><button class="primary-button" value="confirm">结束对局</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

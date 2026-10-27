@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.npmrc
+.netrc
+*.log
+*.key
+*.pem
+*.p12
+*.pfx
+.DS_Store
+coverage/
+test-results/
+data/
+playwright/.auth/
+browser-profiles/
